@@ -304,7 +304,9 @@ class InputObject:
 class MainUI:
     def __init__(self) -> None:
         self.init_main_frame()
+        self.init_top_frame()
         self.init_login_frame()
+        self.init_datetime_frame()
         self.init_class_id_frame()
         self.init_buttons()
 
@@ -319,13 +321,17 @@ class MainUI:
     def init_main_frame(self) -> None:
         self.root = Tk()
         self.root.resizable(False, False)
-        self.root.geometry("450x625")
+        self.root.geometry("550x630")
         self.root.title('AutoClassChoosing Set-up')
 
+    def init_top_frame(self) -> None:
+        self.top_frame = Frame(self.root)
+        self.top_frame.pack(side=TOP, fill='x')
+
     def init_login_frame(self) -> None:
-        self.login_frame = LabelFrame(self.root)
+        self.login_frame = LabelFrame(self.top_frame)
         self.login_frame.config(text=' Login ', font=(ENGLISH, 12))
-        self.login_frame.pack(side=TOP, fill='x', padx=10, pady=10)
+        self.login_frame.pack(side=LEFT, fill='x', padx=10, pady=10)
 
         self.student_id_label = Label(self.login_frame)
         self.student_id_label.config(
@@ -377,6 +383,33 @@ class MainUI:
             if data[2] == 'True':
                 self.checkbox_value.initialize(True)
 
+    def init_datetime_frame(self) -> None:
+        self.datetime_frame = LabelFrame(self.top_frame)
+        self.datetime_frame.config(text=' Start Time Input ', font=(ENGLISH, 12))
+        self.datetime_frame.pack(side=RIGHT, fill='x', padx=10, pady=10)
+
+        self.date_label = Label(self.datetime_frame)
+        self.date_label.config(
+            text='Date (YYYY/MM/DD)', font=(ENGLISH, 14, 'bold'))
+        self.date_label.pack(side=TOP, pady=5)
+
+        self.date = StringVar(self.datetime_frame)
+        self.date_entry = Entry(self.datetime_frame)
+        self.date_entry.config(
+            font=(ENGLISH, 12), textvariable=self.date)
+        self.date_entry.pack(side=TOP, fill='x', padx=5, pady=10)
+
+        self.time_label = Label(self.datetime_frame)
+        self.time_label.config(
+            text='Time (hh:mm)', font=(ENGLISH, 14, 'bold'))
+        self.time_label.pack(side=TOP, pady=5)
+
+        self.time = StringVar(self.datetime_frame)
+        self.time_entry = Entry(self.datetime_frame)
+        self.time_entry.config(
+            font=(ENGLISH, 12), textvariable=self.time)
+        self.time_entry.pack(side=TOP, fill='x', padx=5, pady=10)
+
     def init_class_id_frame(self) -> None:
         self.class_id_frame = LabelFrame(self.root)
         self.class_id_frame.config(text=' Class ID Input ', font=(ENGLISH, 12))
@@ -405,22 +438,25 @@ class MainUI:
         self.entries = [InputObject(self.window_frame)]
 
     def init_buttons(self) -> None:
-        self.add_btn = Button(self.root)
+        self.buttons_frame = Frame(self.root)
+        self.buttons_frame.pack(side=TOP, fill='x')
+
+        self.add_btn = Button(self.buttons_frame)
         self.add_btn.config(text='add', font=(ENGLISH, 14, 'bold'),
                             height=2, width=6, command=self.add_btn_onclick)
-        self.add_btn.pack(side=LEFT, padx=15)
+        self.add_btn.pack(side=LEFT, padx=25)
 
-        self.del_btn = Button(self.root)
-        self.del_btn.config(text='del', font=(ENGLISH, 14, 'bold'),
-                            height=2, width=6, command=self.del_btn_onclick)
-        self.del_btn.pack(side=LEFT, padx=10)
+        self.remove_btn = Button(self.buttons_frame)
+        self.remove_btn.config(text='remove', font=(ENGLISH, 14, 'bold'),
+                            height=2, width=10, command=self.remove_btn_onclick)
+        self.remove_btn.pack(side=LEFT, padx=15)
 
-        self.start_btn = Button(self.root)
+        self.start_btn = Button(self.buttons_frame)
         self.start_btn.config(text='start', font=(ENGLISH, 14, 'bold'),
                               height=2, width=8, command=self.start_btn_onclick)
-        self.start_btn.pack(side=LEFT, padx=10)
+        self.start_btn.pack(side=LEFT, padx=15)
 
-        self.quit_btn = Button(self.root)
+        self.quit_btn = Button(self.buttons_frame)
         self.quit_btn.config(text='quit', font=(ENGLISH, 14, 'bold'),
                              height=2, width=8, command=self.quit_btn_onclick)
         self.quit_btn.pack(side=LEFT, padx=15)
@@ -467,7 +503,7 @@ class MainUI:
         self.entries[idx].set_label('Class ID ' + str(idx + 1))
         self.entries[idx].place(idx)
 
-    def del_btn_onclick(self):
+    def remove_btn_onclick(self):
         if len(self.entries) <= 1:
             return
 
