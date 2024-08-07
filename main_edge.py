@@ -510,18 +510,36 @@ class MainUI:
     def save_data(self):
         bool_value = self.checkbox_value.get()
 
+        if self.student_id.get() == '':
+            student_id = 'null'
+        else:
+            student_id = self.student_id.get()
+
         if bool_value:
             password = self.password.get()
+
+            if password == '':
+                password = 'null'
         else:
             password = 'null'
 
+        if self.date.get() == '':
+            date = 'null'
+        else:
+            date = self.date.get()
+
+        if self.time.get() == '':
+            time = 'null'
+        else:
+            time = self.time.get()
+
         with open(DATA_FILE, 'w') as data_file:
             data_file.write(
-                self.student_id.get() + ' ' +
+                student_id + ' ' +
                 password + ' ' + 
                 str(bool_value) + ' ' + 
-                self.date_entry.get() + ' ' + 
-                self.time_entry.get())
+                date + ' ' + 
+                time)
 
     def add_btn_onclick(self):
         idx = len(self.entries)

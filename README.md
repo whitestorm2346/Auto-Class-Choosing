@@ -4,6 +4,12 @@
 
 In the new version, we have introduced a "Drop Course" function and enhanced the convenience and security of user input for account credentials. The password input will be masked by bullet points, concealing the original password. Additionally, there is an option to select "Remember Password," allowing automatic prefilling of both the username and password for the next use of this application.
 
+### Version 5.0 Download
+
+[Microsoft Edge Version](https://www.dropbox.com/scl/fi/11v5vl7w86wv4xy9f9tb9/v5.0-edge.zip?rlkey=w7e2bmssc8uxglmswee78xphb&st=5cewvu9a&dl=1)
+
+[Chrome Version](https://www.dropbox.com/scl/fi/mj78vi4kyjc1ehz54ixyf/v5.0-chrome.zip?rlkey=q65n81azq58vdwuaxyox325ff&st=b79n4vh1&dl=1)
+
 ### Version 4.0 Download
 
 The program can drop the course in the version.

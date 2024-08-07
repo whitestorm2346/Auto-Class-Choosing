@@ -6,7 +6,7 @@ from time import sleep
 from selenium import webdriver  # for operating the website
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_autoinstaller
 from colorama import Style, Fore, init
 import ddddocr  # for detecting the confirm code
 import base64   # for reading the image present in base 64
@@ -57,11 +57,10 @@ class AutoClassChoosing:
         self.__init_driver__()
 
     def __init_driver__(self) -> None:
+        chromedriver_autoinstaller.install()
         chrome_option = Options()
         chrome_option.add_argument('--log-level=3')
         self.driver = webdriver.Chrome(
-            executable_path=ChromeDriverManager(
-                version='114.0.5735.90').install(),
             options=chrome_option
         )
 
@@ -516,18 +515,36 @@ class MainUI:
     def save_data(self):
         bool_value = self.checkbox_value.get()
 
+        if self.student_id.get() == '':
+            student_id = 'null'
+        else:
+            student_id = self.student_id.get()
+
         if bool_value:
             password = self.password.get()
+
+            if password == '':
+                password = 'null'
         else:
             password = 'null'
 
+        if self.date.get() == '':
+            date = 'null'
+        else:
+            date = self.date.get()
+
+        if self.time.get() == '':
+            time = 'null'
+        else:
+            time = self.time.get()
+
         with open(DATA_FILE, 'w') as data_file:
             data_file.write(
-                self.student_id.get() + ' ' +
+                student_id + ' ' +
                 password + ' ' + 
                 str(bool_value) + ' ' + 
-                self.date_entry.get() + ' ' + 
-                self.time_entry.get())
+                date + ' ' + 
+                time)
 
     def add_btn_onclick(self):
         idx = len(self.entries)
