@@ -7,6 +7,7 @@ from selenium import webdriver  # for operating the website
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from colorama import Style, Fore, init
 import ddddocr  # for detecting the confirm code
 import base64   # for reading the image present in base 64
 
@@ -43,9 +44,10 @@ DATA_FILE = '_data.txt'
 
 
 class AutoClassChoosing:
-    def __init__(self, student_num, password) -> None:
+    def __init__(self, student_num, password, starting_time) -> None:
         self.student_num = student_num
         self.password = password
+        self.starting_time = starting_time
         self.__init_driver__()
 
     def __init_driver__(self) -> None:
@@ -57,50 +59,61 @@ class AutoClassChoosing:
         )
 
     def run(self, entries) -> int:
-        print('Finish the set up. The program will start automatically after countdown.')
+        print(Style.BRIGHT + Fore.YELLOW + 'Finish the set up. The program will start at ' +
+              Style.BRIGHT + Fore.LIGHTCYAN_EX + f'{datetime.strftime(self.starting_time, "%Y/%m/%d %H:%M:%S")}')
 
         while True:
+            while not self.clock_on_time():
+                sleep(1)
+
             login_status = self.login()
 
             if login_status == 0:  # login success
-                print('Login successfully!!')
+                print(Style.BRIGHT + Fore.GREEN + 'Login successfully!!')
                 break
             elif login_status == 1:  # wrong password or wrong student number
-                print('ID or password incorrect!')
+                print(Style.BRIGHT + Fore.LIGHTRED_EX + 'ID or password incorrect!')
                 self.student_num = input('Please enter your ID: ')
                 self.password = input('Please enter your password: ')
             elif login_status == 2:  # wrong confirm code
-                print('Wrong confirm code, program will retry now.')
+                print(Style.BRIGHT + Fore.LIGHTRED_EX + 'Wrong confirm code, program will retry now.')
             elif login_status == 3:  # wrong login time
                 if datetime.now() > self.starting_time:
-                    print('Time Expired!')
+                    print(Style.BRIGHT + Fore.LIGHTRED_EX + 'Time Expired!')
+                    self.close()
 
                     return -1
 
-                print(
-                    f'The program will start at {datetime.strftime(self.starting_time, "%Y/%m/%d %H:%M:%S")}')
+                print(Style.BRIGHT + Fore.YELLOW + 'The program will start at ' + 
+                      Style.BRIGHT + Fore.LIGHTCYAN_EX + f'{datetime.strftime(self.starting_time, "%Y/%m/%d %H:%M:%S")}')
 
                 while not self.clock_on_time():
                     sleep(1)
+            elif login_status == 4:
+                print(Style.BRIGHT + Fore.LIGHTRED_EX + '\nThe class choosing system currently not open for you!')
+                self.close()
+
+                return -1
             else:  # other situations
-                print('Login error!')
+                print(Style.BRIGHT + Fore.LIGHTRED_EX + 'Login error!')
+                self.close()
 
                 return -1
 
         class_choosing_status = self.choose_classes(entries=entries)
 
         if class_choosing_status == 0:  # class choosing successfully
-            print('The program finished! Log messages are written in result.txt')
+            print(Style.BRIGHT + Fore.YELLOW + 'The program finished! Log messages are written in result.txt')
 
             logout_btn = self.driver.find_element(
                 By.XPATH, '//*[@id="btnLogout"]')
             logout_btn.click()
 
-            self.driver.close()
+            self.close()
         else:
-            print('Class choosing error! End up the program.')
+            print(Style.BRIGHT + Fore.LIGHTRED_EX + 'Class choosing error! End up the program.')
 
-            self.driver.close()
+            self.close()
 
             return -1
 
@@ -152,16 +165,6 @@ class AutoClassChoosing:
                 return 1
             elif CONFIRM_FAIL_ENG in msg.text:
                 return 2
-            elif WRONG_TIME_ENG in msg.text:
-                msg_text = msg.text.split('\n')
-                time_info = msg_text[2].split(' ')
-                time = time_info[7] + ' ' + time_info[8]
-
-                self.starting_time = datetime.strptime(
-                    time, '%Y-%m-%d %H:%M:%S')
-
-                return 3
-
             elif MAINTAIN_TIME_ENG in msg.text:
                 current_date = datetime.now().date()
                 noon_time = Time(hour=12, minute=30)
@@ -169,8 +172,10 @@ class AutoClassChoosing:
                 self.starting_time = datetime.combine(current_date, noon_time)
 
                 return 3
-            else:
+            elif WRONG_TIME_ENG in msg.text:
                 return 4
+            else:
+                return 5
 
     def auto_detect_confirm_code(self) -> str:
         # get the image(base64) using javascript
@@ -308,6 +313,7 @@ class MainUI:
         self.init_login_frame()
         self.init_datetime_frame()
         self.init_class_id_frame()
+        self.init_data()
         self.init_buttons()
 
         self.threads = []  # init thread
@@ -371,18 +377,6 @@ class MainUI:
             self.login_inner_frame, text='Remember Password', variable=self.checkbox_value)
         self.checkbox.pack(side=RIGHT, padx=10)
 
-        with open(DATA_FILE, 'r') as data_file:
-            data = data_file.readline().replace('\n', '').split(' ')
-
-            if data[0] != 'null':
-                self.student_id_entry.insert(0, data[0])
-
-            if data[1] != 'null':
-                self.password_entry.insert(0, data[1])
-
-            if data[2] == 'True':
-                self.checkbox_value.initialize(True)
-
     def init_datetime_frame(self) -> None:
         self.datetime_frame = LabelFrame(self.top_frame)
         self.datetime_frame.config(text=' Start Time Input ', font=(ENGLISH, 12))
@@ -437,6 +431,31 @@ class MainUI:
 
         self.entries = [InputObject(self.window_frame)]
 
+    def init_data(self) -> None:
+        with open(DATA_FILE, 'r') as data_file:
+            data = data_file.readline().replace('\n', '').split(' ')
+
+            if data[0] != 'null':
+                self.student_id_entry.insert(0, data[0])
+
+            if data[1] != 'null':
+                self.password_entry.insert(0, data[1])
+
+            if data[2] == 'True':
+                self.checkbox_value.initialize(True)
+
+            now = datetime.now()
+
+            if data[3] == 'null':
+                self.date_entry.insert(0, now.strftime("%Y/%m/%d"))
+            else:
+                self.date_entry.insert(0, data[3])
+            
+            if data[4] == 'null':
+                self.time_entry.insert(0, "12:30")
+            else:
+                self.time_entry.insert(0, data[4])
+
     def init_buttons(self) -> None:
         self.buttons_frame = Frame(self.root)
         self.buttons_frame.pack(side=TOP, fill='x')
@@ -477,9 +496,13 @@ class MainUI:
     def auto_class_choosing(self):
         self.save_data()
 
+        dt_str = f'{self.date_entry.get()} {self.time.get()}'
+        starting_time = datetime.strptime(dt_str, "%Y/%m/%d %H:%M")
+
         self.bot = AutoClassChoosing(
             student_num=self.student_id.get(),
-            password=self.password.get()
+            password=self.password.get(),
+            starting_time=starting_time
         )
 
         self.bot.run(entries=self.entries)
@@ -493,8 +516,12 @@ class MainUI:
             password = 'null'
 
         with open(DATA_FILE, 'w') as data_file:
-            data_file.write(self.student_id.get() + ' ' +
-                            password + ' ' + str(bool_value))
+            data_file.write(
+                self.student_id.get() + ' ' +
+                password + ' ' + 
+                str(bool_value) + ' ' + 
+                self.date_entry.get() + ' ' + 
+                self.time_entry.get())
 
     def add_btn_onclick(self):
         idx = len(self.entries)
@@ -525,6 +552,7 @@ class MainUI:
         except Exception as e:
             print('Browser closed.')
 
+        self.save_data()
         self.root.quit()
         exit(1)
 
@@ -534,5 +562,7 @@ class MainUI:
 
 
 if __name__ == "__main__":
+    init(autoreset=True)
+
     main_ui = MainUI()
     main_ui.run()
